@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+  rust:
+    container_name: rust-tac
+    build:
+      context: ./images/rust
+    command: /bin/bash
+    hostname: docker-rust
+    ports:
+      - "${SERVER_HOST_PORT}:${SERVER_CONTAINER_PORT}"
+    tty: true
+    stdin_open: true
+    volumes:
+      - .:/home/app
+      - ./volumes/etc/inputrc:/etc/inputrc:cached # Autocomplete functionality to the Terminal
+    working_dir: /home/app
+    networks:
+      - internal
+
+  localai:
+    container_name: localai-tac
+    build:
+      context: ./images/localai
+    hostname: docker-localai
+    ports:
+      - "${LOCAL_AI_HOST_PORT}:${LOCAL_AI_CONTAINER_PORT}"
+    volumes:
+      - ./models:/models
+    restart: unless-stopped
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
