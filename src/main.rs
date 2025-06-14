@@ -1,6 +1,8 @@
 mod handlers;
 mod middleware;
+mod models;
 mod routes;
+mod services;
 
 use actix_cors::Cors;
 use actix_web::{http::header, App, HttpServer};
