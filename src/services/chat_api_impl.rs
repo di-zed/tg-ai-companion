@@ -23,18 +23,40 @@ pub struct RealChatApi {
 }
 
 impl RealChatApi {
-    /// Constructs a new [`RealChatApi`] instance using environment variables.
+    /// Creates a new instance of [`RealChatApi`] from environment variables.
+    ///
+    /// Requires the following environment variables to be set and non-empty:
+    /// - `OPEN_AI_URL` — The base URL of the API (e.g., `https://api.openai.com`).
+    /// - `OPEN_AI_MODEL` — The model name to use (e.g., `gpt-3.5-turbo`).
+    /// - `OPEN_AI_API_KEY` — (optional) API key for authorization.
     ///
     /// # Returns
-    /// - `Ok(Self)` — if required environment variables are present
-    /// - `Err(_)` — if `OPEN_AI_URL` or `OPEN_AI_MODEL` is missing
+    /// - `Ok(Self)` if all required environment variables are set and non-empty.
+    /// - `Err` if any required environment variable is missing or empty.
     ///
-    /// # Errors
-    /// Returns an error if `OPEN_AI_URL` or `OPEN_AI_MODEL` environment variables are not set.
+    /// # Example
+    /// ```no_run
+    /// use tg_ai_companion::services::chat_api_impl::RealChatApi;
+    ///
+    /// fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let api = RealChatApi::new_from_env()?;
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn new_from_env() -> Result<Self, Box<dyn std::error::Error>> {
-        let base_url: String = env::var("OPEN_AI_URL")?;
-        let model: String = env::var("OPEN_AI_MODEL")?;
-        let api_key: Option<String> = env::var("OPEN_AI_API_KEY").ok();
+        let base_url = env::var("OPEN_AI_URL")
+            .map_err(|_| "Environment variable OPEN_AI_URL is not set or empty")?;
+        if base_url.trim().is_empty() {
+            return Err("Environment variable OPEN_AI_URL cannot be empty".into());
+        }
+
+        let model = env::var("OPEN_AI_MODEL")
+            .map_err(|_| "Environment variable OPEN_AI_MODEL is not set or empty")?;
+        if model.trim().is_empty() {
+            return Err("Environment variable OPEN_AI_MODEL cannot be empty".into());
+        }
+
+        let api_key = env::var("OPEN_AI_API_KEY").ok();
 
         Ok(Self {
             client: Client::new(),
