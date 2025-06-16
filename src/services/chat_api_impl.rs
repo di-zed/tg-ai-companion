@@ -56,14 +56,21 @@ impl ChatApi for RealChatApi {
     /// # Returns
     ///
     /// * `Ok(String)` — the assistant's response
-    /// * `Err(Box<dyn Error>)` — if request fails or response format is unexpected
+    /// * `Err(Box<dyn Error>)` — if the request fails, or a response format is unexpected
     ///
     /// # Example
     ///
-    /// ```
-    /// let api = RealChatApi::new_from_env()?;
-    /// let reply = api.call_chat_api("Hello!").await?;
-    /// println!("{}", reply);
+    /// ```no_run
+    /// use tg_ai_companion::services::chat_api_impl::RealChatApi;
+    /// use tg_ai_companion::services::chat_api::ChatApi;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let api = RealChatApi::new_from_env()?;
+    ///     let reply = api.call_chat_api("Hello!").await?;
+    ///     println!("{}", reply);
+    ///     Ok(())
+    /// }
     /// ```
     ///
     /// # Errors

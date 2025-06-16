@@ -23,8 +23,29 @@ pub trait ChatApi: Send + Sync {
     /// # Example
     ///
     /// ```no_run
-    /// let response = chat_api.call_chat_api("What's the weather today?").await?;
-    /// println!("Model response: {}", response);
+    /// use async_trait::async_trait;
+    ///
+    /// #[async_trait]
+    /// trait ChatApi {
+    ///     async fn call_chat_api(&self, prompt: &str) -> Result<String, Box<dyn std::error::Error>>;
+    /// }
+    ///
+    /// struct DummyApi;
+    ///
+    /// #[async_trait]
+    /// impl ChatApi for DummyApi {
+    ///     async fn call_chat_api(&self, _prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
+    ///         Ok("Dummy response".to_string())
+    ///     }
+    /// }
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let chat_api = DummyApi;
+    ///     let response = chat_api.call_chat_api("What's the weather today?").await?;
+    ///     println!("Model response: {}", response);
+    ///     Ok(())
+    /// }
     /// ```
     async fn call_chat_api(&self, prompt: &str) -> Result<String, Box<dyn std::error::Error>>;
 }

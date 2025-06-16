@@ -6,7 +6,7 @@ use serde::Deserialize;
 /// https://core.telegram.org/bots/api#message
 #[derive(Debug, Deserialize)]
 pub struct TelegramMessage {
-    pub _message_id: i64,
+    pub message_id: Option<i64>,
     pub text: Option<String>,
 }
 
@@ -16,6 +16,6 @@ pub struct TelegramMessage {
 /// https://core.telegram.org/bots/api#update
 #[derive(Debug, Deserialize)]
 pub struct TelegramUpdate {
-    pub _update_id: i64,
+    pub update_id: Option<i64>,
     pub message: Option<TelegramMessage>,
 }

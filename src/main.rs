@@ -1,16 +1,11 @@
-mod handlers;
-mod middleware;
-mod models;
-mod routes;
-mod services;
-
 use actix_cors::Cors;
 use actix_web::{http::header, App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenv::dotenv;
-use middleware::auth::validator;
-use routes::telegram::init_telegram_routes;
 use std::env;
+
+use tg_ai_companion::middleware::auth::validator;
+use tg_ai_companion::routes::telegram::init_telegram_routes;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
