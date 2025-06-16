@@ -6,7 +6,7 @@ use std::env;
 /// Validates Bearer token from the `Authorization` header.
 ///
 /// This function is used with `HttpAuthentication::bearer(...)` middleware.
-/// It checks whether the provided token matches the `API_TOKEN` environment variable.
+/// It checks whether the provided token matches the `BEARER_TOKEN` environment variable.
 ///
 /// # Arguments
 /// - `req`: Incoming request
@@ -17,7 +17,7 @@ use std::env;
 /// - `Err((Error, req))` if the token is missing or incorrect
 ///
 /// # Environment
-/// - `API_TOKEN`: expected token value
+/// - `BEARER_TOKEN`: expected token value
 pub async fn validator(
     req: ServiceRequest,
     credentials: Option<BearerAuth>,
@@ -26,7 +26,7 @@ pub async fn validator(
         return Err((error::ErrorBadRequest("No Bearer Header"), req));
     };
 
-    let expected_token: String = env::var("API_TOKEN").unwrap_or_default();
+    let expected_token: String = env::var("BEARER_TOKEN").unwrap_or_default();
 
     if credentials.token() != expected_token {
         return Err((error::ErrorBadRequest("Authentication Error"), req));
