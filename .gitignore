@@ -3,4 +3,6 @@
 .vscode
 models/*
 target/*
+volumes/root/.cargo/registry/*
+volumes/root/.bash_history
 !.gitkeep

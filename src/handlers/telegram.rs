@@ -2,6 +2,7 @@ use actix_web::{web, HttpResponse, Responder};
 
 use crate::models::telegram::TelegramUpdate;
 use crate::services::chat_api::ChatApi;
+use crate::services::telegram::send_telegram_message;
 
 /// Handles incoming Telegram webhook updates.
 ///
@@ -28,16 +29,28 @@ pub async fn telegram_webhook(
     update: web::Json<TelegramUpdate>,
     chat_api: web::Data<dyn ChatApi>,
 ) -> impl Responder {
-    let prompt: String = match update.message.as_ref().and_then(|m| m.text.as_ref()) {
-        Some(text) => text.clone(),
-        None => return HttpResponse::BadRequest().body("No Message Text"),
+    let (chat_id, prompt) = match update
+        .message
+        .as_ref()
+        .and_then(|m| Some((m.chat.id, m.text.as_ref()?)))
+    {
+        Some((chat_id, text)) if !text.trim().is_empty() => (chat_id, text.clone()),
+        _ => return HttpResponse::BadRequest().body("No Message Text"),
     };
 
-    match chat_api.call_chat_api(&prompt).await {
-        Ok(response_text) => HttpResponse::Ok().body(response_text),
+    let response_text = match chat_api.call_chat_api(&prompt).await {
+        Ok(text) => text,
         Err(e) => {
             eprintln!("Error calling chat API: {}", e);
-            HttpResponse::InternalServerError().body("Error calling chat API")
+            return HttpResponse::InternalServerError().body("Error calling chat API");
+        }
+    };
+
+    match send_telegram_message(chat_id, response_text).await {
+        Ok(()) => HttpResponse::Ok().body("Message sent"),
+        Err(e) => {
+            eprintln!("Error sending to Telegram: {}", e);
+            HttpResponse::InternalServerError().body("Failed to send message to Telegram")
         }
     }
 }

@@ -14,6 +14,8 @@ services:
     volumes:
       - .:/home/app
       - ./volumes/etc/inputrc:/etc/inputrc:cached # Autocomplete functionality to the Terminal
+      - ./volumes/root/.cargo/registry:/root/.cargo/registry
+      - ./volumes/root/.bash_history:/root/.bash_history
     working_dir: /home/app
     networks:
       - internal

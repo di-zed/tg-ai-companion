@@ -31,7 +31,7 @@ mock! {
 /// when a valid message with text is sent.
 ///
 /// Setup:
-/// - Mocks `call_chat_api` to return `"Hi back!"` when prompt is `"Hello"`.
+/// - Mocks `call_chat_api` to return `"Hi back!"` when the prompt is `"Hello"`.
 /// - Sends a valid request with a Telegram-like message.
 ///
 /// Asserts:
@@ -72,16 +72,16 @@ async fn test_chat_endpoint_ok() {
 }
 
 /// Verifies that the `/chat` endpoint returns a `400 Bad Request`
-/// when the incoming message lacks a `text` field.
+/// when the incoming request contains an empty `prompt` string.
 ///
 /// Sends:
-/// - A request with an empty `"prompt": ""` JSON object.
+/// - A request with JSON body `{ "prompt": "" }`
 ///
 /// Asserts:
 /// - Status is `400 Bad Request`
-/// - Body is `"No Message Text"`
+/// - Body is `"Prompt cannot be empty"`
 #[actix_web::test]
-async fn test_chat_endpoint_no_text() {
+async fn test_chat_endpoint_empty_prompt() {
     let mock_api = MockChatApi::new();
     let chat_api_data = web::Data::from(Arc::new(mock_api) as Arc<dyn ChatApi>);
 
@@ -114,7 +114,7 @@ async fn test_chat_endpoint_no_text() {
 /// - Mocks `call_chat_api` to always return an error.
 ///
 /// Sends:
-/// - A valid request with `"text": "Hello"`
+/// - A valid request with `"prompt": "Hello"`
 ///
 /// Asserts:
 /// - Status is `500 Internal Server Error`
