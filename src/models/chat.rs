@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// Represents a request payload for the chat API endpoint.
 ///
@@ -16,7 +16,7 @@ use serde::Deserialize;
 ///   "prompt": "Tell me a joke."
 /// }
 /// ```
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ChatRequest {
     pub prompt: String,
 }

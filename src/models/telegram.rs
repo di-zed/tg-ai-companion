@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Details in the Telegram API documentation:
 /// https://core.telegram.org/bots/api#chat
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TelegramChat {
     pub id: i64,
 }
@@ -13,7 +13,7 @@ pub struct TelegramChat {
 ///
 /// Details in the Telegram API documentation:
 /// https://core.telegram.org/bots/api#message
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TelegramMessage {
     pub message_id: i64,
     pub chat: TelegramChat,
@@ -24,7 +24,7 @@ pub struct TelegramMessage {
 ///
 /// Details in the Telegram API documentation:
 /// https://core.telegram.org/bots/api#update
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TelegramUpdate {
     pub update_id: i64,
     pub message: Option<TelegramMessage>,
