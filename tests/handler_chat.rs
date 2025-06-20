@@ -8,6 +8,7 @@ use async_trait::async_trait;
 use mockall::predicate::*;
 use mockall::*;
 use serde_json::json;
+use std::error::Error;
 use std::sync::Arc;
 
 use tg_ai_companion::handlers::chat::chat_endpoint;
@@ -16,27 +17,18 @@ use tg_ai_companion::services::chat_api::ChatApi;
 mock! {
     /// A mock implementation of the `ChatApi` trait for testing.
     ///
-    /// This mock is used to simulate the behavior of the `call_chat_api` method
-    /// without performing actual external API calls.
+    /// This mock simulates `call_chat_api` without real HTTP calls.
     pub ChatApi {}
 
     #[async_trait]
     impl ChatApi for ChatApi {
-        /// Simulates sending a prompt to the chat API and returning a response.
-        async fn call_chat_api(&self, prompt: &str) -> Result<String, Box<dyn std::error::Error>>;
+        async fn call_chat_api(&self, prompt: &str) -> Result<String, Box<dyn Error + Send + Sync>>;
     }
 }
 
-/// Verifies that the `/chat` endpoint successfully returns the expected response
-/// when a valid message with text is sent.
+/// Tests successful response from `/chat` endpoint.
 ///
-/// Setup:
-/// - Mocks `call_chat_api` to return `"Hi back!"` when the prompt is `"Hello"`.
-/// - Sends a valid request with a Telegram-like message.
-///
-/// Asserts:
-/// - Status is `200 OK`
-/// - Response body is `"Hi back!"`
+/// Mocks `call_chat_api` to return "Hi back!" when prompt is "Hello".
 #[actix_web::test]
 async fn test_chat_endpoint_ok() {
     let mut mock_api = MockChatApi::new();
@@ -47,6 +39,7 @@ async fn test_chat_endpoint_ok() {
         .times(1)
         .returning(|_| Ok("Hi back!".to_string()));
 
+    // Wrap the mock in Arc and then into web::Data to inject into the app state.
     let chat_api_data = web::Data::from(Arc::new(mock_api) as Arc<dyn ChatApi>);
 
     let app = test::init_service(
@@ -68,18 +61,10 @@ async fn test_chat_endpoint_ok() {
 
     let resp_body = test::read_body(resp).await;
     let resp_str = std::str::from_utf8(&resp_body).unwrap();
-    assert_eq!(resp_str, "Hi back!");
+    assert_eq!(resp_str.trim(), "Hi back!");
 }
 
-/// Verifies that the `/chat` endpoint returns a `400 Bad Request`
-/// when the incoming request contains an empty `prompt` string.
-///
-/// Sends:
-/// - A request with JSON body `{ "prompt": "" }`
-///
-/// Asserts:
-/// - Status is `400 Bad Request`
-/// - Body is `"Prompt cannot be empty"`
+/// Tests `/chat` endpoint returns 400 Bad Request for empty prompt.
 #[actix_web::test]
 async fn test_chat_endpoint_empty_prompt() {
     let mock_api = MockChatApi::new();
@@ -104,21 +89,10 @@ async fn test_chat_endpoint_empty_prompt() {
 
     let resp_body = test::read_body(resp).await;
     let resp_str = std::str::from_utf8(&resp_body).unwrap();
-    assert_eq!(resp_str, "Prompt cannot be empty");
+    assert_eq!(resp_str.trim(), "Prompt cannot be empty");
 }
 
-/// Ensures that the `/chat` endpoint handles internal API errors gracefully
-/// and responds with a `500 Internal Server Error`.
-///
-/// Setup:
-/// - Mocks `call_chat_api` to always return an error.
-///
-/// Sends:
-/// - A valid request with `"prompt": "Hello"`
-///
-/// Asserts:
-/// - Status is `500 Internal Server Error`
-/// - Body is `"Error calling chat API"`
+/// Tests `/chat` endpoint returns 500 Internal Server Error when ChatApi fails.
 #[actix_web::test]
 async fn test_chat_endpoint_api_error() {
     let mut mock_api = MockChatApi::new();
@@ -148,5 +122,5 @@ async fn test_chat_endpoint_api_error() {
 
     let resp_body = test::read_body(resp).await;
     let resp_str = std::str::from_utf8(&resp_body).unwrap();
-    assert_eq!(resp_str, "Error calling chat API");
+    assert_eq!(resp_str.trim(), "Error calling chat API");
 }

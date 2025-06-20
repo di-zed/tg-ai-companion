@@ -51,22 +51,25 @@ pub async fn telegram_webhook(
         _ => return HttpResponse::BadRequest().body("No Message Text"),
     };
 
-    let response_text = match chat_api.call_chat_api(&prompt).await {
-        Ok(text) => text,
-        Err(e) => {
-            eprintln!("Error calling chat API: {}", e);
-            return HttpResponse::InternalServerError().body("Error calling chat API");
-        }
-    };
+    let prompt = prompt.to_string();
+    let chat_api = chat_api.clone();
+    let telegram_api = telegram_api.clone();
 
-    match telegram_api
-        .send_telegram_message(chat_id, response_text)
-        .await
-    {
-        Ok(()) => HttpResponse::Ok().body("Message sent"),
-        Err(e) => {
-            eprintln!("Error sending to Telegram: {}", e);
-            HttpResponse::InternalServerError().body("Failed to send message to Telegram")
+    tokio::spawn(async move {
+        match chat_api.call_chat_api(&prompt).await {
+            Ok(response_text) => {
+                if let Err(e) = telegram_api
+                    .send_telegram_message(chat_id, response_text)
+                    .await
+                {
+                    eprintln!("Error sending to Telegram: {}", e);
+                }
+            }
+            Err(e) => {
+                eprintln!("Error calling chat API: {}", e);
+            }
         }
-    }
+    });
+
+    HttpResponse::Ok().body("Processing")
 }

@@ -1,20 +1,21 @@
+use crate::services::chat_api::ChatApi;
 use async_trait::async_trait;
 use reqwest::{Client, RequestBuilder, Response};
 use serde_json::{json, Value};
 use std::env;
+use std::error::Error;
 
-use crate::services::chat_api::ChatApi;
-
-/// `RealChatApi` is a concrete implementation of the [`ChatApi`] trait that uses
-/// an OpenAI-compatible REST API (e.g., OpenAI, LocalAI).
+/// `RealChatApi` is a concrete implementation of the [`ChatApi`] trait
+/// that uses an OpenAI-compatible REST API (e.g., OpenAI, LocalAI).
 ///
-/// It builds requests using `reqwest`, formats the body according to
-/// the Chat Completions API, and parses the returned assistant message.
+/// It constructs requests using `reqwest`, formats the request body
+/// according to the Chat Completions API spec, and parses the returned
+/// assistant message.
 ///
 /// Environment variables used:
-/// - `OPEN_AI_URL` — Base URL of the API (e.g. `http://localhost:8080` or `https://api.openai.com`)
-/// - `OPEN_AI_MODEL` — Model name (e.g. `gpt-3.5-turbo`, `mistral`)
-/// - `OPEN_AI_API_KEY` — Optional API key (required for OpenAI)
+/// - `OPEN_AI_URL` — base URL of the API (e.g. `http://localhost:8080` or `https://api.openai.com`)
+/// - `OPEN_AI_MODEL` — model name (e.g. `gpt-3.5-turbo`, `mistral`)
+/// - `OPEN_AI_API_KEY` — optional API key (required for OpenAI)
 pub struct RealChatApi {
     client: Client,
     base_url: String,
@@ -26,24 +27,26 @@ impl RealChatApi {
     /// Creates a new instance of [`RealChatApi`] from environment variables.
     ///
     /// Requires the following environment variables to be set and non-empty:
-    /// - `OPEN_AI_URL` — The base URL of the API (e.g., `https://api.openai.com`).
-    /// - `OPEN_AI_MODEL` — The model name to use (e.g., `gpt-3.5-turbo`).
-    /// - `OPEN_AI_API_KEY` — (optional) API key for authorization.
+    /// - `OPEN_AI_URL` — the base URL of the API
+    /// - `OPEN_AI_MODEL` — the model name to use
+    /// - `OPEN_AI_API_KEY` — (optional) API key for authorization
     ///
     /// # Returns
-    /// - `Ok(Self)` if all required environment variables are set and non-empty.
+    ///
+    /// - `Ok(Self)` if all required variables are set correctly.
     /// - `Err` if any required environment variable is missing or empty.
     ///
     /// # Example
+    ///
     /// ```no_run
     /// use tg_ai_companion::services::chat_api_impl::RealChatApi;
     ///
-    /// fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///     let api = RealChatApi::new_from_env()?;
     ///     Ok(())
     /// }
     /// ```
-    pub fn new_from_env() -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new_from_env() -> Result<Self, Box<dyn Error + Send + Sync>> {
         let base_url = env::var("OPEN_AI_URL")
             .map_err(|_| "Environment variable OPEN_AI_URL is not set or empty")?;
         if base_url.trim().is_empty() {
@@ -73,12 +76,12 @@ impl ChatApi for RealChatApi {
     ///
     /// # Arguments
     ///
-    /// * `prompt` - A user-provided string to be sent as input to the assistant.
+    /// * `prompt` — user input string to be sent to the assistant.
     ///
     /// # Returns
     ///
-    /// * `Ok(String)` — the assistant's response
-    /// * `Err(Box<dyn Error>)` — if the request fails, or a response format is unexpected
+    /// * `Ok(String)` — assistant’s response.
+    /// * `Err(Box<dyn Error + Send + Sync>)` — if request fails or response format is invalid.
     ///
     /// # Example
     ///
@@ -87,7 +90,7 @@ impl ChatApi for RealChatApi {
     /// use tg_ai_companion::services::chat_api::ChatApi;
     ///
     /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///     let api = RealChatApi::new_from_env()?;
     ///     let reply = api.call_chat_api("Hello!").await?;
     ///     println!("{}", reply);
@@ -97,11 +100,11 @@ impl ChatApi for RealChatApi {
     ///
     /// # Errors
     ///
-    /// This function returns an error if:
-    /// - The HTTP request fails (e.g., timeout, connection error)
-    /// - The response is not in the expected format
-    /// - `"choices[0].message.content"` is missing or not a string
-    async fn call_chat_api(&self, prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
+    /// Returns an error if:
+    /// - The HTTP request fails (e.g., timeout, connection error).
+    /// - The response does not contain expected fields.
+    /// - `"choices[0].message.content"` is missing or not a string.
+    async fn call_chat_api(&self, prompt: &str) -> Result<String, Box<dyn Error + Send + Sync>> {
         let body: Value = json!({
             "model": self.model,
             "messages": [
@@ -109,7 +112,7 @@ impl ChatApi for RealChatApi {
             ]
         });
 
-        let url: String = format!(
+        let url = format!(
             "{}/v1/chat/completions",
             self.base_url.trim_end_matches('/')
         );

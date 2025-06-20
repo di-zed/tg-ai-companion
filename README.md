@@ -85,6 +85,13 @@ parameters:
 * Docker + Docker Compose
 * [Rust](https://www.rust-lang.org/tools/install) (if running outside Docker)
 
+### 📦 Clone the repository
+
+```bash
+git clone git@github.com:di-zed/tg-ai-companion.git
+cd tg-ai-companion
+```
+
 ### 🧬 Environment Setup
 
 Copy `.env.sample` to `.env`:
@@ -172,7 +179,8 @@ The bot response will be sent back to the user via the Telegram API.
 
 * Accepts JSON with a `prompt`
 * Returns a model response (LocalAI or OpenAI)
-* Can be used directly (outside of Telegram), for example in custom UIs or API clients
+* Can be used directly (outside of Telegram), for example, in custom UIs or API clients
+* Requires Bearer token in the `Authorization` header
 
 Example:
 
@@ -198,6 +206,63 @@ Test coverage includes:
 * `Telegram` and `Chat` handlers
 * `ChatApi` and `TelegramApi` services
 * External API integration using `httpmock`
+
+---
+
+## 🔧 Local Setup and Running Guide
+
+Want to try the bot locally and see it in action? Follow these steps:
+
+### 1. Clone and build the project
+
+Use the instructions that were given above.
+
+By default, the bot listens on `http://localhost:80`.
+
+### 2. Expose your local server with ngrok 🌐
+
+Telegram needs a publicly accessible URL for webhook updates. Use [ngrok](https://ngrok.com/) to create a secure tunnel.
+
+1. Download and install ngrok from https://ngrok.com/download
+
+2. Start a tunnel forwarding your local port (default 80):
+
+   ```bash
+   ngrok http 80
+   ```
+
+3. Copy the generated HTTPS forwarding URL (e.g. `https://123-456-789.ngrok-free.app`)
+
+### 3. Set Telegram webhook URL
+
+Use your bot token (get it from [BotFather](https://t.me/BotFather)) and set the webhook URL:
+
+1. Go to Telegram and find the bot @BotFather
+
+2. Send command:
+   ```bash
+   /newbot
+   ```
+
+3. Enter your name and username (must end in bot)
+
+4. You will receive a BOT_TOKEN of the following type: `123456789:AAH6kDkKvkkkT-PWTwMg6cYtHEb3vY_tS1k`.
+   Save it to the.env file, in the TELEGRAM_BOT_TOKEN parameter.
+
+5. Request the webhook to be installed using the following command:
+
+   ```bash
+   curl -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook" \
+        -H "Content-Type: application/json" \
+        -d '{"url": "https://YOUR_NGROK_URL/telegram/webhook"}'
+   ```
+
+   Replace `YOUR_NGROK_URL` with your ngrok HTTPS URL and `<TELEGRAM_BOT_TOKEN>` with your Telegram bot token.
+
+### 4. Start chatting!
+
+Send messages to your bot in Telegram.
+Your bot will respond using the AI chat API.
 
 ---
 

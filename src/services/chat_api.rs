@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use std::error::Error;
 
 /// Defines the interface for a chat-based language model API (e.g., OpenAI, LocalAI).
 ///
@@ -18,34 +19,35 @@ pub trait ChatApi: Send + Sync {
     /// # Returns
     ///
     /// * `Ok(String)` — The model's response as a plain string.
-    /// * `Err(Box<dyn std::error::Error>)` — If the API call or response parsing fails.
+    /// * `Err(Box<dyn std::error::Error + Send + Sync>)` — If the API call or response parsing fails.
     ///
     /// # Example
     ///
     /// ```no_run
     /// use async_trait::async_trait;
+    /// use std::error::Error;
     ///
     /// #[async_trait]
-    /// trait ChatApi {
-    ///     async fn call_chat_api(&self, prompt: &str) -> Result<String, Box<dyn std::error::Error>>;
+    /// trait ChatApi: Send + Sync {
+    ///     async fn call_chat_api(&self, prompt: &str) -> Result<String, Box<dyn Error + Send + Sync>>;
     /// }
     ///
     /// struct DummyApi;
     ///
     /// #[async_trait]
     /// impl ChatApi for DummyApi {
-    ///     async fn call_chat_api(&self, _prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
+    ///     async fn call_chat_api(&self, _prompt: &str) -> Result<String, Box<dyn Error + Send + Sync>> {
     ///         Ok("Dummy response".to_string())
     ///     }
     /// }
     ///
     /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     ///     let chat_api = DummyApi;
     ///     let response = chat_api.call_chat_api("What's the weather today?").await?;
     ///     println!("Model response: {}", response);
     ///     Ok(())
     /// }
     /// ```
-    async fn call_chat_api(&self, prompt: &str) -> Result<String, Box<dyn std::error::Error>>;
+    async fn call_chat_api(&self, prompt: &str) -> Result<String, Box<dyn Error + Send + Sync>>;
 }

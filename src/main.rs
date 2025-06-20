@@ -1,10 +1,8 @@
 use actix_cors::Cors;
 use actix_web::{http::header, middleware::NormalizePath, App, HttpServer};
-use actix_web_httpauth::middleware::HttpAuthentication;
 use dotenv::dotenv;
 use std::env;
 
-use tg_ai_companion::middleware::auth::validator;
 use tg_ai_companion::routes::chat::init_chat_routes;
 use tg_ai_companion::routes::telegram::init_telegram_routes;
 
@@ -21,8 +19,6 @@ async fn main() -> std::io::Result<()> {
     println!("🚀 Server running at {}", bind_address);
 
     HttpServer::new(move || {
-        let auth = HttpAuthentication::with_fn(validator);
-
         App::new()
             .service(init_chat_routes())
             .service(init_telegram_routes())
@@ -37,7 +33,6 @@ async fn main() -> std::io::Result<()> {
                     .supports_credentials()
                     .max_age(3600),
             )
-            .wrap(auth)
             .wrap(NormalizePath::trim())
     })
     .bind(bind_address)?
